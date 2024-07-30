@@ -1,0 +1,22 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+
+# System files
+.DS_Store
+
+# Compiled files
+*.class
+*.pyc
+__pycache__/
+
+# Dependency directories
+vendor/
+
+myenv/
