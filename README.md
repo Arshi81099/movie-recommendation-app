@@ -23,6 +23,21 @@ This project includes a frontend application built with npm, a backend system wi
 3. Run the frontend application:
     npm run dev
 
+```sh
+npm install
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
+npm run dev
+```
+
+### Compile and Minify for Production
+
+```sh
+npm run build
+
 ## Backend Setup
 1. Start the Redis server:
     redis-server
