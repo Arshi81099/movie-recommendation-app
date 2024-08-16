@@ -1,64 +1,61 @@
 <template>
   <div>
-    <!-- Add Theatre button -->
-    <button v-if="isAdmin" ><router-link to="/showadd"> Add Show</router-link></button>
+    <!-- Add Show button -->
+  <div class="center-container">
+    <router-link v-if="isAdmin" to="/showadd" class="btn-view">
+    <strong>Add Show</strong>
+    </router-link>
+  </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Genre</th>
-          <th>Tag</th>
-          <th>Time</th>
-          <th>Image</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th> Ticket Price</th>
-          <th v-if="isAdmin">Edit/Delete</th>
-          <th v-if="!isAdmin">View</th>
-        </tr>
-      </thead>
-      <!-- Table Body -->
-      <tbody>
-        <tr v-for="(Show, index) in Shows" :key="index">
-          <td>{{ Show.name }}</td>
-          <td>{{ Show.genre }}</td>
-          <td>{{ Show.tag }}</td>
-          <td>{{ Show.time }}</td>
-          <td><img :src="getShowImage(Show.img)" class="card-img" :alt="Show.name"></td>
+    <!-- Cards for each show -->
+    <div class="row">
+      <div v-for="(Show, index) in Shows" :key="index" class="col-md-4 mb-4">
+        <div class="card h-100">
+          <img :src="getShowImage(Show.img)" class="card-img-top" :alt="Show.name">
+          <div class="card-body">
+            <h5 class="card-title">{{ Show.name }}</h5>
+            <p class="card-text"><strong>Genre:</strong> {{ Show.genre }}</p>
+            <p class="card-text"><strong>Tag:</strong> {{ Show.tags }}</p>
+            <p class="card-text"><strong>Time:</strong> {{ Show.time }}</p>
+          </div>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>Start Date:</strong> {{ Show.start_date.slice(0, 16) }}</li>
+            <li class="list-group-item"><strong>End Date:</strong> {{ Show.end_date.slice(0, 16) }}</li>
+            <li class="list-group-item"><strong>Ticket Price:</strong> {{ Show.ticket_price }}</li>
+          </ul>
+          <div class="card-body row">
+            <button class="btn-view me-2" @click.prevent="viewShow(Show.id, availableSeats(Show, capacity))">View</button>
+            <button v-if="isAdmin" class="btn-view me-2" @click.prevent="editShowtime(Show.id)">Edit</button>
+            <button v-if="isAdmin" class="btn-del me-2" @click.prevent="openDeleteConfirmation(Show.id)">Delete</button>
 
-          <td>{{ Show.start_date.slice(0, 16) }}</td>
-          <td>{{ Show.end_date.slice(0, 16) }}</td>
-          <td>{{ Show.ticket_price }}</td>
-          <td>
-            <button v-if="isAdmin" :code="code" @click="editShowtime(Show.id)">Edit</button>
-            <button v-if="isAdmin" class="btn btn-danger"
-            @click="showDeleteConfirmation = true">Delete show</button>
-            <div v-if="showDeleteConfirmation" class="mt-4">
-            <h5>Confirm Deletion</h5>
-            <p>Are you sure you want to delete this show? This action cannot be undone.</p>
-            <div class="text-right">
-              <button v-if="isAdmin" class=" btn btn-danger" @click="deleteShowtime(Show.id)">Delete</button>
-              <button type="button" class="btn btn-secondary" @click="showDeleteConfirmation = false">Cancel</button>
+            <!-- Delete Confirmation Dialog -->
+            <div v-if="selectedShow === Show.id && showDeleteConfirmation" class="mt-4 card">
+              <div class="card-body">
+                <h5>Confirm Deletion</h5>
+                <p>Are you sure you want to delete this show? This action cannot be undone.</p>
+                <div class="text-right">
+                  <button class="btn btn-danger mr-2" @click="deleteShowtime(Show.id)">Delete</button>
+                  <button type="button" class="btn btn-secondary" @click="closeDeleteConfirmation">Cancel</button>
+                </div>
+              </div>
             </div>
           </div>
-            <button @click="viewShow(Show.id, availableSeats(Show, capacity))">View</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
   
 <script>
 import { checkAdmin } from '../router/protectRoutes.js';
 export default {
-  props: ["code", "capacity"],
+  props: ["code", "capacity", "id"],
   data() {
     return {
       showDeleteConfirmation: false,
       isAdmin: false,
       Shows: [], 
+      selectedShow: null, 
     };
   },
   created() {
@@ -87,10 +84,9 @@ export default {
     },
     async loadShows() {
       try {
-        console.log(this.code);
         const response = await this.$http.get(`theatres/${this.code}`); 
         this.Shows = response.data;
-        console.log(this.shows);
+        // console.log(this.shows);
       } catch (error) {
         console.error('Error fetching shows:', error);
       }
@@ -98,6 +94,14 @@ export default {
     editShowtime(showId) {
       // this.$router.push({ name: 'showedit', params: { showId: showId } });
       this.$router.push({ path: `/showedit/${showId}`, query: { code: this.code } });
+    },
+    openDeleteConfirmation(showId) {
+      this.selectedShow = showId;
+      this.showDeleteConfirmation = true;
+    },
+    closeDeleteConfirmation() {
+      this.showDeleteConfirmation = false;
+      this.selectedShow = null;
     },
     async deleteShowtime(showId) {
       const access_token = sessionStorage.getItem('access_token') || localStorage.getItem('access_token');

@@ -2,19 +2,26 @@
   <div class="container mt-4">
     <div class="row">
       <div class="col-md-6">
-        <img :src="getShowImage(Show.img)" alt="Movie Poster" class="img-fluid rounded mb-3">
+        <img :src="getShowImage(Show.img)" alt="Movie Poster" class="image-preview">
       </div>
       <div class="col-md-6">
-        <h2 class="mb-3">{{ Show.name }}</h2>
-        <p><strong>Genre:</strong> {{ Show.genre }}</p>
-        <p><strong>Tag:</strong> {{ Show.tag }}</p>
-        <p><strong>Start Date:</strong> {{ Show.start_date.slice(0, 16) }}</p>
-        <p><strong>End Date:</strong> {{ Show.end_date .slice(0, 16)}}</p>
-        <p><strong>Ticket Price:</strong> {{ Show.ticket_price }}</p>
-        <p><strong> Available Seats:</strong> {{ capacity - Show.bookings }}</p>
-        <p><strong>Time:</strong> {{ Show.time }}</p>
-        <button @click="bookNow(Show.id)">Book</button>
-      </div>
+  <div class="card mb-4">
+    <div class="card-body">
+      <h3 class="card-title">{{ Show.name }}</h3>
+      <p class="card-text"><strong>Genre:</strong> {{ Show.genre }}</p>
+      <p class="card-text"><strong>Tag:</strong> {{ Show.tags }}</p>
+      <p class="card-text"><strong>Start Date:</strong> {{ Show.start_date.slice(0, 16) }}</p>
+      <p class="card-text"><strong>End Date:</strong> {{ Show.end_date.slice(0, 16) }}</p>
+      <p class="card-text"><strong>Ticket Price:</strong> {{ Show.ticket_price }}</p>
+      <p class="card-text"><strong>Theatre Code:</strong> {{ Show.theatre_code }}</p>
+      <!-- <p class="card-text"><strong>Available Seats:</strong> {{ capacity - Show.bookings }}</p> -->
+      <p class="card-text"><strong>Available Seats:</strong> {{ availableSeats !== undefined && availableSeats !== null ? availableSeats : 'Loading...' }}</p>
+      <p class="card-text"><strong>Time:</strong> {{ Show.time }}</p>
+      <button class="btn btn-primary" @click="bookNow(Show.id)">Book</button>
+    </div>
+  </div>
+</div>
+
     </div>
   </div>
 </template>
@@ -38,23 +45,24 @@ export default {
   },
   methods: {
     bookNow(showId){
-      this.$router.push({name:"bookshow", params:{showId:showId}, query:{availableSeats : this.availableSeats, code:this.code}})
+      const theatreCode = this.Show.theatre_code; 
+      this.$router.push({name:"bookshow", params:{showId:showId}, query:{availableSeats : this.availableSeats, code:theatreCode}});
     },
+
     getShowImage(encodedString) {
       return "data:image/png;base64," + encodedString;
     },
 
     async fetchShow() {
-
       try {
         const showId = this.$route.params.showId;
-        const capacity = this.$route.query.capacity;
+        const capacity = Number(this.$route.query.capacity);
         const code = this.$route.query.code;
         this.capacity = capacity;
         this.code = code;
         const response = await this.$http.get(`show/${showId}`);
         this.Show = response.data;
-        this.availableSeats = capacity - this.Show.bookings
+        this.availableSeats = capacity - Number(this.Show.bookings || 0);
       } catch (error) {
         console.error('Error fetching theatre:', error);
       }

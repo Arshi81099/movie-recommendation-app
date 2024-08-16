@@ -14,16 +14,17 @@
           <h6 class="card-subtitle mb-2 text-muted">Capacity: {{ theatre.capacity }}</h6>
           <p class="card-text" style="height: 2rem;">Address: {{ theatre.address }}</p>
           <p class="card-text">Code: {{ theatre.code }}</p>
+          <p class="card-text">ID: {{ theatre.id }}</p>
 
           <!-- Flexbox container for buttons -->
-          <div class="d-flex justify-content-end">
-            <button class="btn btn-primary me-2">
+          <div class="d-flex justify-content-left">
+            <button class="btn-view me-2">
               <a href="#" @click.prevent="viewTheatre(theatre.code)">View</a>
             </button>
-            <button v-if="isAdmin" class="btn btn-primary me-2">
+            <button v-if="isAdmin" class="btn-view me-2">
               <a href="#" @click.prevent="editTheatre(theatre.code)">Edit</a>
             </button>
-            <button v-if="isAdmin" class="btn btn-delete">
+            <button v-if="isAdmin" class="btn btn-del">
               <a href="#" @click.prevent="toggleDeleteConfirmation(index)">Delete</a>
             </button>
           </div>
@@ -70,19 +71,20 @@ export default {
     },
     checkAdmin() {
       const isAdmin = checkAdmin();
-      console.log(isAdmin);
+      // console.log(isAdmin);
       if (isAdmin) {
         this.isAdmin = true;
       }
     },
     viewTheatre(theatreCode) {
+      // console.log(theatreCode);
       this.$router.push({ name: 'theatres', params: { theatreCode: theatreCode } });
     },
     async loadTheatres() {
       try {
         const response = await this.$http.get('theatres');
         this.theatres = response.data;
-        console.log(this.theatres);
+        // console.log(this.theatres);
       } catch (error) {
         console.error('Error fetching theatres:', error);
       }

@@ -74,14 +74,6 @@ class Base64ImageField(fields.Raw):
 
 # Output Fields in JSON Format
 
-theatre_fields = {
-    "id": fields.Integer,
-    "name": fields.String,
-    "capacity": fields.Integer,
-    "address": fields.String,
-    "code": fields.String,
-}
-
 show_fields = {
     "id": fields.Integer,
     "name": fields.String,
@@ -94,6 +86,14 @@ show_fields = {
     "end_date": fields.DateTime(dt_format='iso8601'),
     "ticket_price": fields.Float,
     "theatre_code": fields.String,
+}
+
+theatre_fields = {
+    "id": fields.Integer,
+    "name": fields.String,
+    "capacity": fields.Integer,
+    "address": fields.String,
+    "code": fields.String,
 }
 
 trending_show_fields = {
@@ -400,41 +400,43 @@ class TheatreAPI(Resource):
 
 class ShowAPI(Resource):
     def get(self, id):
-        show = Show.query.filter(Show.id == id).scalar()
-        print(show)
-        if show:
-            if show.img:
-                str = show.img
-                image = base64.b64encode(str)
-                encoded_img = image.decode('UTF-8')
-                return {
-                    "id": show.id,
-                    "name": show.name,
-                    "img": encoded_img,
-                    "genre": show.genre,
-                    "tags": show.tags,
-                    "time": show.time,
-                    "rating": show.rating,
-                    "start_date": show.start_date,
-                    "end_date": show.end_date,
-                    "ticket_price": show.ticket_price,
-                    "theatre_code": show.theatre_code
-                }, 200
+        # Fetch the show with the given ID
+        show = Show.query.filter(Show.id == id).first()
+
+        # Check if the show exists
+        if show is None:
+            return {"error": "Show not found"}, 404
+        
+        # Check and encode image if present
+        if show.img:
+            if isinstance(show.img, bytes):
+                encoded_img = base64.b64encode(show.img).decode('utf-8')  # Encode bytes to base64 string
             else:
-                return {
-                    "id": show.id,
-                    "name": show.name,
-                    "genre": show.genre,
-                    "tags": show.tags,
-                    "time": show.time,
-                    "rating": show.rating,
-                    "start_date": show.start_date,
-                    "end_date": show.end_date,
-                    "ticket_price": show.ticket_price,
-                    "theatre_code": show.theatre_code
-                }, 200
+                encoded_img = show.img  # If it's already a string or URL
         else:
-            raise NotFoundError(status_code=404)
+            encoded_img = None  # Handle cases where there is no image
+
+        # Format date fields to string if they are datetime objects
+        start_date = show.start_date.strftime('%Y-%m-%d') if isinstance(show.start_date, datetime) else show.start_date
+        end_date = show.end_date.strftime('%Y-%m-%d') if isinstance(show.end_date, datetime) else show.end_date
+
+        # Construct the response data
+        response_data = {
+            "id": show.id,
+            "name": show.name,
+            "img": encoded_img,
+            "genre": show.genre,
+            "tags": show.tags,
+            "time": show.time,
+            "rating": show.rating,
+            "start_date": start_date,
+            "end_date": end_date,
+            "ticket_price": show.ticket_price,
+            "theatre_code": show.theatre_code
+        }
+
+        # Return the response data with a 200 OK status
+        return jsonify(response_data).get_json(), 200
 
     def put(self, id):
         args = show_parser.parse_args()
@@ -456,7 +458,7 @@ class ShowAPI(Resource):
         if name:
             show_o.name = name
         if img:
-            image = image.read()
+            image = img.read()  # Correct variable reference
             show_o.img = image
         if genre:
             show_o.genre = genre
@@ -465,9 +467,9 @@ class ShowAPI(Resource):
         if time:
             show_o.time = time
         if start_date:
-            show_o.start_date = datetime(start_date).date()
+            show_o.start_date = datetime.strptime(start_date, '%Y-%m-%d').date()  # Correct date parsing
         if end_date:
-            show_o.end_date = datetime(end_date).date()
+            show_o.end_date = datetime.strptime(end_date, '%Y-%m-%d').date()  # Correct date parsing
         if ticket_price:
             show_o.ticket_price = ticket_price
         if theatre_code:
@@ -497,11 +499,9 @@ class ShowAPI(Resource):
         ticket_price = args.get('ticket_price', None)
         theatre_code = args.get('theatre_code', None)
 
-            # Convert string dates to date objects
+        # Convert string dates to date objects
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
         end_date = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
-
-        print(name, genre, tags, time, start_date, end_date, ticket_price, theatre_code)
 
         if (theatre_code is None) or (name is None) or (genre is None) or (tags is None) or (time is None) or (start_date is None) or (end_date is None) or (ticket_price is None):
             return "Field can't be empty.", 400
@@ -526,27 +526,28 @@ class ShowAPI(Resource):
 class BookAPI(Resource):
     def post(self):
         data = request.get_json()
-        book_date = data['book_date']
-        show_date = data['show_date']
-        show_time = data['show_time']
+        # Convert strings to datetime.date or string (for time)
+        book_date = datetime.strptime(data['book_date'], '%Y-%m-%dT%H:%M:%S.%fZ').date() if data['book_date'] else None
+        show_date = datetime.strptime(data['show_date'], '%Y-%m-%d').date() if data['show_date'] else None
+        show_time = datetime.strptime(data['show_time'], '%H:%M').strftime('%H:%M:%S') if data['show_time'] else None
+
         seats_booked = data['seats_booked']
         theatre = data['theatre']
         show = data['show']
         user = data['show']
-
         theatre_capacity = Theatre.query.filter(Theatre.code == theatre).scalar()
         theatre_capacity = theatre_capacity.capacity
         total_booked = db.session.query(db.func.sum(Book.seats_booked)).filter(
-            Book.theatre == theatre,
-            Book.show == show,
+            Book.theatre_id == theatre,
+            Book.show_id == show,
             Book.show_date == show_date,
             Book.show_time == show_time
-        ).scalar()
+        ).scalar() or 0
 
-        avl_seats = theatre_capacity - total_booked
+        avl_seats = int(theatre_capacity) - int(total_booked)
 
         if avl_seats >= seats_booked:
-            book = Book(show_date=show_date, show_time=show_time, seats_booked=seats_booked, theatre=theatre, show=show, user=user)
+            book = Book(book_date=book_date, show_date=show_date, show_time=show_time, seats_booked=seats_booked, theatre_id=theatre, show_id=show, user_id=user)
             db.session.add(book)
             db.session.commit()
             return "Successfully booked!", 201
@@ -603,17 +604,42 @@ class SearchAPI(Resource):
         return {"theatres": theatre_data, "shows": show_data}, 200
 
 class TheatreShowListAPI(Resource):
-    @marshal_with(show_fields)
     def get(self, code):
         theatre = Theatre.query.filter(Theatre.code == code).first()
+
         if theatre is None:
             return {"error": "Theatre not found"}, 404
-
+        
         shows = theatre.shows
-        if len(shows) > 0:
-            return shows, 200
+
+        # Manually format the show details into a list of dictionaries
+        formatted_shows = []
+        for show in shows:
+            # Check if img is in bytes and encode it
+            if isinstance(show.img, bytes):
+                encoded_img = base64.b64encode(show.img).decode('utf-8')  # Encode bytes to base64 string
+            else:
+                encoded_img = show.img  # If it's already a string or URL
+
+            show_data = {
+                "id": show.id,
+                "name": show.name,
+                "img": encoded_img,
+                "genre": show.genre,
+                "tags": show.tags,
+                "time": show.time,
+                "rating": show.rating,
+                "start_date": show.start_date.strftime('%Y-%m-%d'),  # Format date to string
+                "end_date": show.end_date.strftime('%Y-%m-%d'),  # Format date to string
+                "ticket_price": show.ticket_price,
+                "theatre_code": show.theatre_code
+            }
+            formatted_shows.append(show_data)
+
+        if len(formatted_shows) > 0:
+            return jsonify(formatted_shows).get_json(), 200
         else:
-            return {}, 200
+            return jsonify([]), 200  # Return an empty list if there are no shows
 
 class TheatreListAPI(Resource):
     @marshal_with(theatre_fields)
@@ -623,6 +649,40 @@ class TheatreListAPI(Resource):
             return theatres
         else: 
             return {}, 200
+
+
+class ShowListAPI(Resource):
+    def get(self):
+        shows = Show.query.all()
+        # Manually format the show details into a list of dictionaries
+        formatted_shows = []
+        for show in shows:
+            # Check if img is in bytes and encode it
+            if isinstance(show.img, bytes):
+                encoded_img = base64.b64encode(show.img).decode('utf-8')  # Encode bytes to base64 string
+            else:
+                encoded_img = show.img  # If it's already a string or URL
+
+            show_data = {
+                "id": show.id,
+                "name": show.name,
+                "img": encoded_img,
+                "genre": show.genre,
+                "tags": show.tags,
+                "time": show.time,
+                "rating": show.rating,
+                "start_date": show.start_date.strftime('%Y-%m-%d'),  # Format date to string
+                "end_date": show.end_date.strftime('%Y-%m-%d'),  # Format date to string
+                "ticket_price": show.ticket_price,
+                "theatre_code": show.theatre_code
+            }
+            formatted_shows.append(show_data)
+
+        if len(formatted_shows) > 0:
+            return jsonify(formatted_shows).get_json(), 200
+        else:
+            return jsonify([]), 200  # Return an empty list if there are no shows
+        
 
 class Trending(Resource):
     @marshal_with(trending_show_fields)
@@ -638,6 +698,7 @@ class Trending(Resource):
             return {},200
 
         return trending_shows, 200
+    
 # helper functions
 def is_valid_email(email):
     return email and '@' in email
@@ -800,20 +861,20 @@ def setup_periodic_tasks(sender, **kwargs):
 
 celery.conf.timezone = 'UTC'
 
-
 api.add_resource(VisitedTodayResource, '/visited-today')
 api.add_resource(Report, '/report')
 api.add_resource(Login, '/login')
 api.add_resource(Logout, '/logout')
 api.add_resource(ReportStatus, '/report/<string:task_id>')
 api.add_resource(TheatreListAPI, '/theatres')  # Endpoint for getting all theatres
-api.add_resource(TheatreShowListAPI, '/theatres/<string:code>') 
+api.add_resource(TheatreShowListAPI, '/theatres/<int:code>') 
 api.add_resource(UserAPI, "/user", "/user/<string:username>")
 api.add_resource(SearchAPI, '/search/<string:search_str>')
 api.add_resource(Trending, '/trending')
 api.add_resource(BookAPI, '/book', '/book/<int:id>')
 api.add_resource(TheatreAPI, '/theatre', '/theatre/<int:code>')
 api.add_resource(ShowAPI, '/show', '/show/<int:id>')
+api.add_resource(ShowListAPI, '/allshows')
 # api.add_resource(SearchAPI, '/search')
 
 

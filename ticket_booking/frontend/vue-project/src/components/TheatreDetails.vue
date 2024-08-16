@@ -17,6 +17,10 @@
         <span class="label">Code:</span>
         <span>{{ theatre.code }}</span>
       </div>
+      <div class="detail-item">
+        <span class="label">ID:</span>
+        <span>{{ theatre.id }}</span>
+      </div>
     </div>
     <ShowtimeManagement :code="theatre.code" :capacity="theatre.capacity" />
   </div>
@@ -38,7 +42,6 @@ export default {
   },
   mounted() {
     const theatreCode = this.$route.params.theatreCode;
-    console.log('Theatre Code:', theatreCode);
     this.fetchTheatre()
 
   },

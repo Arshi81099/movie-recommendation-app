@@ -1,38 +1,44 @@
 <template>
   <div class="container mt-4">
-    <table class="show-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Genre</th>
-          <th>Tag</th>
-          <th>Time</th>
-          <th>Image</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th> Ticket Price</th>
-          <th>View</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(Show, index) in Shows" :key="index">
-          <td>{{ Show.name }}</td>
-          <td>{{ Show.genre }}</td>
-          <td>{{ Show.tag }}</td>
-          <td>{{ Show.time }}</td>
-          <td> <img :src="getShowImage(Show.img)" class="card-img" :alt="Show.name"></td>
+    <div class="row">
+      <!-- Add Show button -->
+      <div class="d-flex justify-content-left mb-4">
+        <router-link v-if="isAdmin" to="/showadd" class="btn-view">
+          <strong>Add Show</strong>
+        </router-link>
+      </div>
 
-          <td>{{ Show.start_date.slice(0, 16) }}</td>
-          <td>{{ Show.end_date.slice(0, 16) }}</td>
-          <td>{{ Show.ticket_price }}</td>
-          <td>
-            <button @click="viewShow(Show, availableSeats(Show))">View</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <!-- Cards for each show -->
+      <div v-for="(Show, index) in Shows" :key="index" class="col-md-4 mb-4">
+        <div class="card h-100">
+          <!-- Show Image -->
+          <img :src="getShowImage(Show.img)" class="card-img-top" :alt="Show.name">
+
+          <!-- Card Body -->
+          <div class="card-body">
+            <h5 class="card-title">{{ Show.name }}</h5>
+            <p class="card-text"><strong>Genre:</strong> {{ Show.genre }}</p>
+            <p class="card-text"><strong>Tag:</strong> {{ Show.tags }}</p>
+            <p class="card-text"><strong>Time:</strong> {{ Show.time }}</p>
+          </div>
+
+          <!-- Card Footer -->
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>Start Date:</strong> {{ Show.start_date.slice(0, 16) }}</li>
+            <li class="list-group-item"><strong>End Date:</strong> {{ Show.end_date.slice(0, 16) }}</li>
+            <li class="list-group-item"><strong>Ticket Price:</strong> Rs. {{ Show.ticket_price }}</li>
+          </ul>
+
+          <!-- View Button -->
+          <div class="card-body">
+            <button class="btn-view" @click="viewShow(Show, availableSeats(Show))">View</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
   
 <script>
 export default {
@@ -54,6 +60,7 @@ export default {
       const showId = Show.id;
       const capacity = Show.capacity;
       const code = Show.theatre_code;
+      console.log(code);
       this.$router.push({ path: `/moviedetails/${showId}`, query: { capacity: capacity, code: code } });
     },
     async fetchShows() {
