@@ -21,3 +21,8 @@ __pycache__/
 vendor/
 
 myenv/
+
+*.sqlite3
+
+*.rdb
+*.db
