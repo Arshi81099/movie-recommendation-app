@@ -12,16 +12,15 @@
       <p class="card-text"><strong>Tag:</strong> {{ Show.tags }}</p>
       <p class="card-text"><strong>Start Date:</strong> {{ Show.start_date.slice(0, 16) }}</p>
       <p class="card-text"><strong>End Date:</strong> {{ Show.end_date.slice(0, 16) }}</p>
-      <p class="card-text"><strong>Ticket Price:</strong> {{ Show.ticket_price }}</p>
+      <p class="card-text"><strong>Ticket Price:</strong> Rs. {{ Show.ticket_price }}</p>
       <p class="card-text"><strong>Theatre Code:</strong> {{ Show.theatre_code }}</p>
       <!-- <p class="card-text"><strong>Available Seats:</strong> {{ capacity - Show.bookings }}</p> -->
-      <p class="card-text"><strong>Available Seats:</strong> {{ availableSeats !== undefined && availableSeats !== null ? availableSeats : 'Loading...' }}</p>
+      <p class="card-text"><strong>Available Seats:</strong> {{ Show.available_seats }}</p>
       <p class="card-text"><strong>Time:</strong> {{ Show.time }}</p>
       <button class="btn btn-primary" @click="bookNow(Show.id)">Book</button>
     </div>
   </div>
 </div>
-
     </div>
   </div>
 </template>

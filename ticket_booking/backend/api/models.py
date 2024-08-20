@@ -50,7 +50,9 @@ class Show(db.Model):
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     ticket_price = db.Column(db.Integer, nullable=False)
-
+    capacity = db.Column(db.Integer, nullable=False)
+    available_seats = db.Column(db.Integer, nullable=False)
+   
     theatre_code = db.Column(db.Integer, db.ForeignKey('theatre.code'), nullable=False)
     bookings = db.relationship('Book', cascade='all, delete', backref='show_', lazy=True)
 
@@ -58,7 +60,6 @@ class Theatre(db.Model):
     __tablename__ = "theatre"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, nullable=False)
-    capacity = db.Column(db.String, nullable=False)
     address = db.Column(db.String, nullable=False)
     code = db.Column(db.String, unique=True, nullable=False)
 

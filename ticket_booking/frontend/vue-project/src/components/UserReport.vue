@@ -1,16 +1,18 @@
 
 <template>
     <div>
-        <button class="btn w-max-24 mt-2 btn btn-primary view-button" @click="showForm = true">Generate Your Booking History
+        <button class="btn w-max-24 mt-2 btn btn-primary" @click="showForm = true">Generate Your Booking History
             Report</button>
         <div v-if="showForm" class="mt-4">
             <div class="text-right">
-                <label>Select Report Format:</label>
+                <label style="color: black;">Select Report Format:</label>
                 <select v-model="selectedFormat">
                     <option value="pdf">PDF</option>
                 </select>
-                <button @click="generateReport">Generate</button>
-                <button @click="showForm = false">Cancel</button>
+                <div class="button-container">
+                    <button class="btn-view" @click="generateReport">Generate</button>
+                    <button class="btn-view" @click="showForm = false">Cancel</button>
+                </div>
             </div>
         </div>
     </div>

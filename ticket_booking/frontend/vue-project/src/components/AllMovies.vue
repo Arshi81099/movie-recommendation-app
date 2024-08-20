@@ -31,7 +31,7 @@
 
           <!-- View Button -->
           <div class="card-body">
-            <button class="btn-view" @click="viewShow(Show, availableSeats(Show))">View</button>
+            <button class="btn-view" @click="viewShow(Show)">View</button>
           </div>
         </div>
       </div>
@@ -39,41 +39,65 @@
   </div>
 </template>
 
-  
 <script>
+import axios from 'axios';
 export default {
   data() {
     return {
       Shows: null
     };
   },
-  computed: {
-    availableSeats() {
-      return (Show) => Show.capacity - Show.bookings;
-    },
-  },
   mounted() {
-    this.fetchShows()
+    this.fetchShows();
+    this.fetchTheatre();
   },
   methods: {
-    viewShow(Show, availableSeats) {
-      const showId = Show.id;
-      const capacity = Show.capacity;
-      const code = Show.theatre_code;
-      console.log(code);
-      this.$router.push({ path: `/moviedetails/${showId}`, query: { capacity: capacity, code: code } });
-    },
+    // viewShow(Show) {
+    //   const showId = Show.id;
+    //   const capacity = Show.capacity;
+    //   const code = Show.theatre_code;
+
+    //   const availableSeats = this.availableSeats(Show);
+    //   this.$router.push({ path: `/moviedetails/${showId}`, query: { capacity: capacity, code: code, availableSeats: availableSeats } });
+    // },
+
+    async viewShow(Show) {
+  const showId = Show.id;
+  const capacity = Show.capacity;
+  const code = Show.theatre_code;
+
+  try {
+    const response = await axios.get(`http://127.0.0.1:5000/theatre/${code}`);
+    this.theatre = response.data;
+    const availableSeats = this.availableSeats(Show, this.theatre);
+    this.$router.push({ 
+      path: `/moviedetails/${showId}`, 
+      query: { 
+        capacity: capacity, 
+        code: code, 
+        availableSeats: availableSeats 
+      } 
+    });
+  } catch (error) {
+    console.error('Error fetching theatre:', error);
+  }
+},
     async fetchShows() {
       try {
         const response = await this.$http.get('allshows');
         this.Shows = response.data;
-
       } catch (error) {
         console.error('Error fetching shows:', error);
       }
     },
+
     getShowImage(encodedString) {
       return "data:image/png;base64," + encodedString;
+    },
+    availableSeats(Show, theatre) {
+      const ans =  theatre.capacity - Show.bookings;
+      console.log(Show.bookings);
+      return ans;
     },
   },
 };

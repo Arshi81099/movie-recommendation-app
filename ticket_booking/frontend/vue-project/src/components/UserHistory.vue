@@ -1,26 +1,34 @@
 <template>
-    <div class="user-history">
-      <h1><strong>Booking History</strong></h1>
-      <ul v-if="$route.path !== '/admin'" >
-        <li v-for="booking in bookingData" :key="booking.id">
-          <span><strong>Tickets booked:</strong> {{ booking.seats_booked }}</span><br>
-          <span><strong>Show:</strong> {{ booking.show_name }}</span><br>
-          <span><strong>Show Date:</strong> {{ booking.show_date }}</span><br>
-          <span><strong>Time:</strong> {{ booking.show_time }}</span><br>
-          <span><strong>Booking Date:</strong> {{ booking.book_date }}</span>
-        </li>
-      </ul>
-      <ul v-if="$route.path === '/admin'" >
-        <li v-for="booking in recent_bookings" :key="booking.id">
-          <span><strong>Tickets booked:</strong> {{ booking.seats_booked }}</span><br>
-          <span><strong>Show:</strong> {{ booking.show_name }}</span><br>
-          <span><strong>Show Date:</strong> {{ booking.show_date }}</span><br>
-          <span><strong>Time:</strong> {{ booking.show_time }}</span><br>
-          <span><strong>Booking Date:</strong> {{ booking.book_date }}</span>
-        </li>
-      </ul>
+  <div class="user-history">
+    <h1 class="title">Booking History</h1>
+    <div v-if="$route.path !== '/admin'" class="booking-list">
+      <div v-for="booking in bookingData" :key="booking.id" class="booking-item">
+        <div class="booking-header">
+          <h3 class="show-name">{{ booking.show_name }}</h3>
+          <span class="show-date">{{ booking.show_date }}</span>
+        </div>
+        <div class="booking-details">
+          <div><strong>Tickets booked:</strong> {{ booking.seats_booked }}</div>
+          <div><strong>Time:</strong> {{ booking.show_time }}</div>
+          <div><strong>Booking Date:</strong> {{ booking.book_date }}</div>
+        </div>
+      </div>
     </div>
-  </template>
+    <div v-if="$route.path === '/admin'" class="booking-list">
+      <div v-for="booking in recent_bookings" :key="booking.id" class="booking-item admin">
+        <div class="booking-header">
+          <h3 class="show-name">{{ booking.show_name }}</h3>
+          <span class="show-date">{{ booking.show_date }}</span>
+        </div>
+        <div class="booking-details">
+          <div><strong>Tickets booked:</strong> {{ booking.seats_booked }}</div>
+          <div><strong>Time:</strong> {{ booking.show_time }}</div>
+          <div><strong>Booking Date:</strong> {{ booking.book_date }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
   
 <script>
 export default {
@@ -45,8 +53,21 @@ export default {
                   params: { email: email },
                   headers: headers,
               });
-              this.bookingData = response.data.user_bookings;
-              this.recent_bookings = response.data.recent_bookings;
+
+        // Assuming the entire array is user bookings
+        this.bookingData = response.data;
+
+        // If you want to extract recent bookings, you can do something like this:
+        // For example, let's assume "recent" means bookings with the most recent show date.
+        this.recent_bookings = this.bookingData.filter((booking) => {
+            const showDate = new Date(booking.show_date);
+            const today = new Date();
+            return showDate >= today;
+        });
+
+        console.log('Booking data:', this.bookingData);
+        console.log('Recent bookings:', this.recent_bookings);
+
           } catch (error) {
               console.error('Error fetching booking data:', error);
           }

@@ -4,14 +4,12 @@
         <UserHistory />
       <div class="quick-links">
         <h2>Quick Links</h2>
-        <div class="links">
+
           <router-link to="/theatremanagement" class="link">
-            <v-icon>Theatre</v-icon>
-            Management
+            <h3>        <div class="links">Theatre Management</div></h3>
           </router-link>
         </div>
         <ExportCsv />
-      </div>
     </form>
   </div>
   </template>

@@ -1,8 +1,8 @@
 <template>
     <div class="csv-export-container">
       <h4 class="title">Enter the codes of the theatres whose data you want to export as comma-separated values.</h4>
-      <input v-model="theatreCodesInput" type="text" placeholder="Theatre Codes (Ex: A,B,C)" />
-      <button @click="fetchDataAndConvertToCSV">Export CSV Data</button>
+      <input v-model="theatreCodesInput" type="text" class="csv-export" placeholder="Theatre Codes (Ex: A,B,C)" />
+      <button class="csv-export-btn" @click="fetchDataAndConvertToCSV">Export CSV Data</button>
   
       <div v-if="isDataReady" class="download-container">
         <p class="message">Data is ready for download!</p>
@@ -54,19 +54,15 @@
       const options = { day: '2-digit', month: 'short', year: 'numeric' };
       return date.toLocaleDateString('en-US', options);
     },
+
     convertToCSV(jsonData) {
-
-
       const csvLines = [];
-
 
       const keys1 = Object.keys(jsonData[0]);
       csvLines.push(keys1.join(','));
 
-
       const values1 = keys1.map(key => jsonData[0][key]);
       csvLines.push(values1.join(','));
-
 
       const desiredOrderKeys = [
         "id",
@@ -92,7 +88,6 @@
         });
         csvLines.push(values2.join(','));
       }
-
 
       return csvLines.join('\n');
     },

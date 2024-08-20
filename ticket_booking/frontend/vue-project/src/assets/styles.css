@@ -286,7 +286,7 @@ label {
 }
 
 .image-preview {
-  max-width: 700px; 
+  max-width: 600px; 
   max-height: 700px; 
   border-radius: 8px; /* Optional: Add rounded corners */
   object-fit: cover;  /* Ensures the image maintains aspect ratio */
@@ -333,4 +333,109 @@ label {
   display: flex;
   justify-content: center; /* Horizontal Centering */
   align-items: center;     /* Vertical Centering */
+}
+
+.links {
+  color: blue;
+}
+
+
+.csv-export {
+  width: 70%;
+}
+
+.csv-export-btn {
+  background-color: #007bff;
+}
+
+.csv-export-btn:hover {
+  background-color: #0056b3;
+}
+
+.user-history {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.title {
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.booking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.booking-item {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.booking-item:hover {
+  background-color: #f1f1f1;
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+.booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.show-name {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #0056b3;
+}
+
+.show-date {
+  font-size: 1em;
+  color: #666;
+}
+
+.booking-details {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.admin .booking-item {
+  background-color: #e9f7fc;
+  border-color: #b2d8f7;
+}
+
+.admin .show-name {
+  color: #003d6b;
+}
+
+.extra-actions {
+  margin-right: 25%;
+  margin-top: 50%;
+}
+
+.dashboard {
+  width: 100%;
+  max-width: 800px;
+  padding: 20px;
+  background-color: #ff69b4;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hist {
+  margin-top: 45%;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: row; /* Align items vertically */
+  gap: 10px; /* Space between buttons */
+  max-width: 200px; /* Optional: Set a maximum width */
 }

@@ -9,11 +9,6 @@
       </div>
 
       <div class="form-group">
-        <label for="capacity">Capacity:</label>
-        <input type="number" class="form-control" v-model="newTheatre.capacity" id="capacity" required>
-      </div>
-
-      <div class="form-group">
         <label for="address">Address:</label>
         <input type="text" class="form-control" v-model="newTheatre.address" id="address" required>
       </div>
@@ -40,7 +35,6 @@ export default {
       theatres: [],
       newTheatre: {
         name: null,
-        capacity: null,
         address: null,
         code: null,
       },
@@ -72,7 +66,6 @@ export default {
     clearForm() {
       this.newTheatre = {
         name: null,
-        capacity: null,
         address: null,
         code: null,
       };

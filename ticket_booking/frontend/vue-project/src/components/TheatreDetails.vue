@@ -6,10 +6,6 @@
         <span>{{ theatre.name }}</span>
       </div>
       <div class="detail-item">
-        <span class="label">Capacity:</span>
-        <span>{{ theatre.capacity }}</span>
-      </div>
-      <div class="detail-item">
         <span class="label">Address:</span>
         <span>{{ theatre.address }}</span>
       </div>
@@ -22,7 +18,7 @@
         <span>{{ theatre.id }}</span>
       </div>
     </div>
-    <ShowtimeManagement :code="theatre.code" :capacity="theatre.capacity" />
+    <ShowtimeManagement :code="theatre.code" />
   </div>
 </template>
   
@@ -48,7 +44,6 @@ export default {
 
   methods: {
     async fetchTheatre() {
-
       try {
         const theatreCode = this.$route.params.theatreCode;
         const response = await this.$http.get(`theatre/${theatreCode}`);

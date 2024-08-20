@@ -13,8 +13,8 @@
         <label for="seats_booked">Seats Booked:</label>
         <input v-model.number="seats_booked" type="number" class="form-control" id="seats_booked" min="1" :max="availableSeats" required @input="updateAvailableSeats">
         <br>
-        <p>Total seats: {{ availableSeats }}</p>
-        <p>Available seats: {{ temp_seats }}</p>
+        <p>Seats Available: {{ Show.available_seats }}</p>
+        <!-- <p>Seats Left: {{ temp_seats }}</p> -->
         <p>Total Price: {{ totalPrice }} Rs</p>
       </div>
       <button class="btn-primary" type="submit">Book Now</button>
@@ -30,7 +30,6 @@ export default {
       show_date: null,
       seats_booked: 0,
       temp_seats: '',
-      availableSeats: 0,
       code: '', 
     };
   },
@@ -39,25 +38,10 @@ export default {
       return this.seats_booked * this.Show.ticket_price;
     },
   },
-  watch: {
-    seats_booked(newVal) {
-      this.updateAvailableSeats();
-    },
-    availableSeats(newVal) {
-      this.updateAvailableSeats();
-    }
-  },
   mounted() {
     this.fetchShow();
   },
   methods: {
-    updateAvailableSeats() {
-      if (this.seats_booked >= 0 && this.seats_booked <= this.availableSeats) {
-        this.temp_seats = this.availableSeats - this.seats_booked;
-      } else {
-        this.temp_seats = `You can't book more than ${this.availableSeats}`;
-      }
-    },
     async bookShow() {
       const date1 = new Date(this.Show.start_date);
       const date2 = new Date(this.Show.end_date);

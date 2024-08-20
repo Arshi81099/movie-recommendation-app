@@ -10,11 +10,23 @@
         <label for="genre">Genre:</label>
         <input v-model="genre" type="text" id="genre" class="form-control" required>
       </div>
+
+      <div class="row">
+      <div class="col">
       <div class="form-group">
         <label for="tags">Tag:</label>
         <input v-model="tags" type="text" id="tags" class="form-control" required>
       </div>
-      <div class="row">
+      </div>
+      <div class="col">
+      <div class="form-group">
+      <label for="capacity">Capacity:</label>
+      <input v-model="capacity" type="number" id="capacity" class="form-control" required>
+    </div>
+    </div>
+      </div>
+
+  <div class="row">
   <div class="col">
     <div class="form-group">
       <label for="code">Theatre Code:</label>
@@ -73,6 +85,7 @@ export default {
       enddate: '',
       time: '',
       ticket_price: '',
+      capacity: '',
 
       imageFile: null,
       imagePreview: null,
@@ -103,6 +116,7 @@ export default {
         showData.append('end_date', this.enddate);
         showData.append('ticket_price', this.ticket_price);
         showData.append('theatre_code', this.code);
+        showData.append('capacity', this.capacity);
         showData.append('img', this.imageFile);
         // console.log(showData)
         const response = await this.$http.post("show", showData, {

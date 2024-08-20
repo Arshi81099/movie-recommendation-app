@@ -11,8 +11,7 @@
       <div v-for="(theatre, index) in theatres" :key="index" class="card theatre-card">
         <div class="card-body">
           <h5 class="card-title">{{ theatre.name }}</h5>
-          <h6 class="card-subtitle mb-2 text-muted">Capacity: {{ theatre.capacity }}</h6>
-          <p class="card-text" style="height: 2rem;">Address: {{ theatre.address }}</p>
+          <p class="card-text">Address: {{ theatre.address }}</p>
           <p class="card-text">Code: {{ theatre.code }}</p>
           <p class="card-text">ID: {{ theatre.id }}</p>
 

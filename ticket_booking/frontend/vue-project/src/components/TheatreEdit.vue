@@ -8,10 +8,6 @@
         <input v-model="name" type="text" id="name" class="form-control"  required>
       </div>
       <div class="form-group">
-        <label for="location">Capacity:</label>
-        <input v-model="capacity" type="text" id="capacity" class="form-control"  required>
-      </div>
-      <div class="form-group">
         <label for="contact">Address:</label>
         <input v-model="address" type="text" id="address" class="form-control" required>
       </div>
@@ -31,7 +27,6 @@ export default {
   data() {
     return {
       name: null,
-      capacity: null,
       address: null,
       // code: null,
     };
@@ -45,7 +40,6 @@ export default {
         };
         const theaterData = {
           name: this.name,
-          capacity: this.capacity,
           address: this.address,
           // code: this.code,
         };

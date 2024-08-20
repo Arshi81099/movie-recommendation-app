@@ -17,6 +17,7 @@ from celery import Celery
 from celery.schedules import crontab
 from redis import Redis
 from datetime import datetime
+from sqlalchemy import func
 
 
 app = Flask(__name__)
@@ -86,12 +87,13 @@ show_fields = {
     "end_date": fields.DateTime(dt_format='iso8601'),
     "ticket_price": fields.Float,
     "theatre_code": fields.String,
+    "capacity": fields.Integer,
+    "available_seats": fields.Integer
 }
 
 theatre_fields = {
     "id": fields.Integer,
     "name": fields.String,
-    "capacity": fields.Integer,
     "address": fields.String,
     "code": fields.String,
 }
@@ -168,9 +170,8 @@ create_user_parser.add_argument("email")
 create_user_parser.add_argument("password")
 
 theatre_parser = reqparse.RequestParser()
-theatre_parser.add_argument("name")
-theatre_parser.add_argument("capacity")
-theatre_parser.add_argument("address")
+theatre_parser.add_argument('name', type=str, help='Name of the theatre')
+theatre_parser.add_argument('address', type=str, help='Address of the theatre')
 theatre_parser.add_argument("code")
 
 show_parser = reqparse.RequestParser()
@@ -183,6 +184,9 @@ show_parser.add_argument("start_date", type=str, location='form')
 show_parser.add_argument("end_date", type=str, location='form')
 show_parser.add_argument("ticket_price", type=str, location='form')
 show_parser.add_argument("theatre_code", type=str, location='form')
+show_parser.add_argument("capacity", type=str, location='form')
+show_parser.add_argument("available_seats", type=str, location='form')
+
 
 class Login(Resource):
     def post(self):
@@ -318,13 +322,11 @@ class UserAPI(Resource):
 
 class TheatreAPI(Resource):
     def get(self, code):
-        theatre = Theatre.query.filter(Theatre.id == code).scalar()
-
+        theatre = Theatre.query.filter(Theatre.code == code).scalar()
         if theatre:
             return {
                 "id": theatre.id,
                 "name": theatre.name,
-                "capacity": theatre.capacity,
                 "address": theatre.address,
                 "code": theatre.code,
             }, 200
@@ -332,17 +334,15 @@ class TheatreAPI(Resource):
             raise NotFoundError(status_code=404)
 
     def put(self, code):
-        theatre = Theatre.query.filter(Theatre.id == code).scalar()
+        theatre = Theatre.query.filter(Theatre.code == code).scalar()
         args = theatre_parser.parse_args()
         
         name = args.get('name', None)
-        capacity = args.get('capacity', None)
         address = args.get('address', None)
 
         if (name is not None) :
             theatre.name = name
-        if (capacity is not None) :
-            theatre.capacity = capacity
+
         if (address is not None) :
             theatre.address = address
 
@@ -353,18 +353,12 @@ class TheatreAPI(Resource):
         args = theatre_parser.parse_args()
 
         name = args.get('name', None)
-        capacity = args.get('capacity', None)
         address = args.get('address', None)
         code = args.get('code', None)
 
         if name is None:
             return "Provide name", 400
 
-        if (capacity is None) or not (capacity.isnumeric()):
-            raise BusinessValidationError(
-                status_code=400,
-                error_message="Capacity is required and should be integer."
-            )
         if (address is None) :
             raise BusinessValidationError(
                 status_code=400,
@@ -378,7 +372,6 @@ class TheatreAPI(Resource):
             )
         theatre = Theatre(
             name=name,
-            capacity=capacity,
             address=address,
             code=code
         )
@@ -432,7 +425,9 @@ class ShowAPI(Resource):
             "start_date": start_date,
             "end_date": end_date,
             "ticket_price": show.ticket_price,
-            "theatre_code": show.theatre_code
+            "theatre_code": show.theatre_code,
+            "capacity": show.capacity,
+            "available_seats": show.available_seats
         }
 
         # Return the response data with a 200 OK status
@@ -449,6 +444,8 @@ class ShowAPI(Resource):
         end_date = args.get('end_date', None)
         ticket_price = args.get('ticket_price', None)
         theatre_code = args.get('theatre_code', None)
+        capacity = args.get('capacity', None)
+        available_seats = args.get('available_seats', None)
 
         show_o = Show.query.filter(Show.id == id).scalar()
 
@@ -474,6 +471,10 @@ class ShowAPI(Resource):
             show_o.ticket_price = ticket_price
         if theatre_code:
             show_o.theatre_code = theatre_code
+        if capacity:
+            show_o.capacity = capacity
+        if available_seats:
+            show_o.available_seats = available_seats
 
         db.session.commit()
         return '', 201
@@ -498,12 +499,14 @@ class ShowAPI(Resource):
         end_date = args.get('end_date', None)
         ticket_price = args.get('ticket_price', None)
         theatre_code = args.get('theatre_code', None)
+        capacity = args.get('capacity', None)
+        available_seats = capacity
 
         # Convert string dates to date objects
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
         end_date = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
 
-        if (theatre_code is None) or (name is None) or (genre is None) or (tags is None) or (time is None) or (start_date is None) or (end_date is None) or (ticket_price is None):
+        if (theatre_code is None) or (name is None) or (genre is None) or (tags is None) or (time is None) or (start_date is None) or (end_date is None) or (ticket_price is None) or (capacity is None):
             return "Field can't be empty.", 400
 
         theatre = theatre_code.split(',')
@@ -511,13 +514,13 @@ class ShowAPI(Resource):
         if img:
             image = img.read() 
             for i in theatre:
-                show = Show(name = name, img = image, genre = genre, tags = tags, time = time, start_date = start_date, end_date = end_date, ticket_price = ticket_price, theatre_code = i)
+                show = Show(name = name, img = image, genre = genre, tags = tags, time = time, start_date = start_date, end_date = end_date, ticket_price = ticket_price, theatre_code = i, capacity = capacity, available_seats = available_seats)
                 db.session.add(show)
                 db.session.commit()
 
         else:
             for i in theatre:
-                show = Show(name = name, genre = genre, tags = tags, time = time, start_date = start_date, end_date = end_date, ticket_price = ticket_price, theatre_code = i)
+                show = Show(name = name, genre = genre, tags = tags, time = time, start_date = start_date, end_date = end_date, ticket_price = ticket_price, theatre_code = i, capacity = capacity, available_seats = available_seats)
                 db.session.add(show)
                 db.session.commit()
         
@@ -534,48 +537,73 @@ class BookAPI(Resource):
         seats_booked = data['seats_booked']
         theatre = data['theatre']
         show = data['show']
-        user = data['show']
-        theatre_capacity = Theatre.query.filter(Theatre.code == theatre).scalar()
-        theatre_capacity = theatre_capacity.capacity
-        total_booked = db.session.query(db.func.sum(Book.seats_booked)).filter(
-            Book.theatre_id == theatre,
-            Book.show_id == show,
-            Book.show_date == show_date,
-            Book.show_time == show_time
-        ).scalar() or 0
+        user = data['show']  # Corrected to 'user'
 
-        avl_seats = int(theatre_capacity) - int(total_booked)
+        show_instance = Show.query.get(show)
 
-        if avl_seats >= seats_booked:
-            book = Book(book_date=book_date, show_date=show_date, show_time=show_time, seats_booked=seats_booked, theatre_id=theatre, show_id=show, user_id=user)
+        if show_instance is None:
+            raise BusinessValidationError(status_code=404, error_message="Show not found!")
+
+        avl_seats = show_instance.capacity - seats_booked
+
+        if avl_seats >= 0:
+            book = Book(
+                book_date=book_date, 
+                show_date=show_date, 
+                show_time=show_time, 
+                seats_booked=seats_booked, 
+                theatre_id=theatre, 
+                show_id=show, 
+                user_id=user
+            )
             db.session.add(book)
+
+            # Update available seats
+            show_instance.available_seats = avl_seats
             db.session.commit()
+
             return "Successfully booked!", 201
         else:
             raise BusinessValidationError(
                 status_code=400,
-                error_message=f'Only {avl_seats} seats available!'
+                error_message=f'Only {show_instance.available_seats} seats available!'
             )
 
-    def get(self, id):
-        book = Book.query.filter(Book.id == id).scalar()
-        show_id = book.show
-        show = Show.query.filter(Show.id == show_id).scalar()
-        if book:
-            return {
+    def get(self):
+        email = request.args.get('email').strip()
+        print(f"Email received: '{email}'")  # Debug print
+        
+        if not email:
+            raise BusinessValidationError(status_code=400, error_message="Email is required!")
+        
+        user = User.query.filter(func.lower(User.email) == email.lower()).scalar()
+        print(f"User found: {user}")  # Debug print
+        
+        if not user:
+            raise NotFoundError(status_code=404, error_message="User not found!")
+        
+        bookings = Book.query.filter(Book.user_id == user.id).all()
+        
+        if not bookings:
+            raise NotFoundError(status_code=404, error_message="No bookings found for this user!")
+
+        formatted_bookings = []
+        for book in bookings:
+            show = Show.query.filter(Show.id == book.show_id).scalar()
+            if show:
+                formatted_bookings.append({
                     "id": book.id,
-                    "book_date": book.book_date,
-                    "show_date": book.show_date,
+                    "book_date": book.book_date.strftime('%Y-%m-%d'),
+                    "show_date": book.show_date.strftime('%Y-%m-%d'),
                     "show_time": book.show_time,
                     "seats_booked": book.seats_booked,
-                    "theatre": book.theatre,
-                    "show_id": show_id,
+                    "theatre": book.theatre_id,
+                    "show_id": book.show_id,
                     "show_name": show.name,
-                    "user": book.user
-                }, 200
-
-        else:
-            raise NotFoundError(status_code=404)
+                    "user": book.user_id
+                })
+        
+        return jsonify(formatted_bookings).get_json(), 200
 
 class SearchAPI(Resource):
     def get(self, search_str):
@@ -642,14 +670,24 @@ class TheatreShowListAPI(Resource):
             return jsonify([]), 200  # Return an empty list if there are no shows
 
 class TheatreListAPI(Resource):
-    @marshal_with(theatre_fields)
     def get(self):
         theatres = Theatre.query.all()
-        if len(theatres) > 0:
-            return theatres
-        else: 
-            return {}, 200
+        print(theatres)
+        # Manually format the theatre details into a list of dictionaries
+        formatted_theatres = []
+        for theatre in theatres:
+            theatre_data = {
+                "id": theatre.id,
+                "name": theatre.name,
+                "address": theatre.address,
+                "code": theatre.code,
+            }
+            formatted_theatres.append(theatre_data)
 
+        if formatted_theatres:
+            return jsonify(formatted_theatres).get_json(), 200
+        else:
+            return jsonify([]), 200  # Return an empty list if there are no theatres
 
 class ShowListAPI(Resource):
     def get(self):
@@ -683,7 +721,6 @@ class ShowListAPI(Resource):
         else:
             return jsonify([]), 200  # Return an empty list if there are no shows
         
-
 class Trending(Resource):
     @marshal_with(trending_show_fields)
     def get(self):
@@ -698,7 +735,7 @@ class Trending(Resource):
             return {},200
 
         return trending_shows, 200
-    
+  
 # helper functions
 def is_valid_email(email):
     return email and '@' in email
@@ -727,7 +764,7 @@ class VisitedTodayResource(Resource):
         return response
 
 # SendDailyReminderTask class with Celery task
-@celery.task
+@celery.task(name='app.send_daily_reminder')
 def send_daily_reminder_task():
     now = datetime.utcnow()
     current_user = get_jwt_identity()
@@ -746,6 +783,7 @@ def send_daily_reminder_task():
 class Report(Resource):
     @jwt_required()
     def post(self):
+
         user_email = get_jwt_identity()
 
         # Check if the user_email is a valid email address before generating the report
@@ -754,6 +792,7 @@ class Report(Resource):
 
         # Generate the report asynchronously using Celery
         task = generate_report.apply_async(args=[user_email])
+        print(f"Task ID: {task.id}")
 
         # Return a response to the user with the task ID
         return {'task_id': task.id}, 202
@@ -790,7 +829,8 @@ class ReportStatus(Resource):
         return jsonify(response)
 
 @celery.task
-def generate_report(user_email, form):
+def generate_report(user_email):
+    form = 'pdf'
     user = User.query.filter_by(email=user_email).first()
     bookings = Book.query.filter_by(user_id=user.id).all()
 

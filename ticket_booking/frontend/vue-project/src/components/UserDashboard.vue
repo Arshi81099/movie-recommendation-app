@@ -1,38 +1,57 @@
 <template>
   <div class="login-container">
-    <form @submit.prevent="updateDetails" class="dashboard-form ">
-    <!-- Personalized Dashboard -->
-    <h2>Welcome, {{ user.name }}</h2>
-    <p>Email: {{ user.email }}</p>
+    <!-- Personal Details Card -->
+    <div class="row dashboard" >
+      <div class="col-md-6" >
 
-    <!-- Update Personal Details Form -->
-    <h3>Update Personal Details</h3>
-      <label for="displayName">Name:</label>
-      <input type="text" class="form-control" v-model="name" id="name">
-      <br>
-      <label for="password">Password:</label>
-      <input type="password" class="form-control" v-model="pass" id="password" required>
-      <br>
-      <label for="confirmpassword">Confirm Password:</label>
-      <input type="password" class="form-control" v-model="confirmpassword" id="confirm-password" required>
-      <br>
-      <button type="submit"  class="btn btn-primary">Update Details</button>
-      <br>
-      <button class="btn btn-delete" @click="showDeleteConfirmation = true">Delete Account</button>
-      <br>
-      <div v-if="showDeleteConfirmation" class="mt-4">
-            <h5>Confirm Deletion</h5>
-            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-            <div class="text-right">
-                <button type="button" class="btn btn-delete" @click="deleteUser">Delete</button>
-                <button type="button" class="btn btn-secondary" @click="showDeleteConfirmation = false">Cancel</button>
-            </div>
+          <div class="card-body" >
+            <h2>Welcome, {{ user.name }}</h2>
+            <p>Email: {{ user.email }}</p>
+
+            <h3>Update Personal Details</h3>
+            <form @submit.prevent="updateDetails">
+              <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" v-model="name" id="name">
+              </div>
+              <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" v-model="pass" id="password" required>
+              </div>
+              <div class="form-group">
+                <label for="confirm-password">Confirm Password:</label>
+                <input type="password" class="form-control" v-model="confirmpassword" id="confirm-password" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Update Details</button>
+              <br>
+              <button type="button" class="btn btn-delete" @click="showDeleteConfirmation = true">Delete Account</button>
+              <div v-if="showDeleteConfirmation" class="mt-4">
+                <h5>Confirm Deletion</h5>
+                <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                <div class="text-right">
+                  <button type="button" class="btn btn-delete" @click="deleteUser">Delete</button>
+                  <br>
+                  <button type="button" class="btn btn-primary" @click="showDeleteConfirmation = false">Cancel</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        
+      </div>
+
+      <!-- Booking History and UserReport Card -->
+      <div class="col-md-6">
+        <div class="card hist">
+          <div class="card-body">
+            <button type="button" class="btn btn-primary" @click="bookHistory">Booking History</button>
+            <UserReport />
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary" @click="bookHistory">Booking History </button>
-        <UserReport />
-    </form>
+      </div>
+    </div>
   </div>
 </template>
+
 
 <script>
 import UserReport from './UserReport.vue';
@@ -76,7 +95,7 @@ export default {
           Authorization: `Bearer ${access_token}`,
         };
         const data = { "email": email }
-        console.log(headers)
+        // console.log(headers)
         const response = await this.$http.get('user', { params: data, headers: headers });
         this.user = response.data;
       } catch (error) {
@@ -90,7 +109,7 @@ export default {
       };
       if (this.password != this.confirmpassword) {
         window.alert("Your Password and confirm password should be same.")
-        console.log(this.password, this.confirmpassword)
+        // console.log(this.password, this.confirmpassword)
         return
       }
       if (this.name.trim() === "") {
@@ -104,7 +123,7 @@ export default {
         this.$router.push('/userdashboard');
         window.location.reload()
       } else if (response.status === 400) {
-        console.log(response.data)
+        // console.log(response.data)
         const error_message = response.data.error_message;
         // console.log(error_message)
         window.alert(error_message)
