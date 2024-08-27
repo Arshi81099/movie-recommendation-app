@@ -65,3 +65,16 @@ class Theatre(db.Model):
 
     bookings = db.relationship('Book', cascade='all, delete', backref='theatre_', lazy=True)
     shows = db.relationship('Show', cascade='all, delete', backref='theatre', lazy=True)
+
+class Review(db.Model):
+    __tablename__ = "review"
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Float, nullable=False)
+    comment = db.Column(db.Text, nullable=True)
+    review_score = db.Column(db.Integer, nullable=False)
+
+    show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    show = db.relationship('Show', backref=db.backref('reviews', lazy=True))
+    user = db.relationship('User', backref=db.backref('reviews', lazy=True))

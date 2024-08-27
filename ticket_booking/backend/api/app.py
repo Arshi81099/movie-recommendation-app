@@ -18,6 +18,9 @@ from celery.schedules import crontab
 from redis import Redis
 from datetime import datetime
 from sqlalchemy import func
+import pandas as pd
+import pickle
+from text_process import TextProcessor
 
 
 app = Flask(__name__)
@@ -187,6 +190,9 @@ show_parser.add_argument("theatre_code", type=str, location='form')
 show_parser.add_argument("capacity", type=str, location='form')
 show_parser.add_argument("available_seats", type=str, location='form')
 
+
+with open('logreg_pipeline.pkl', 'rb') as f:
+    loaded_pipeline = pickle.load(f)
 
 class Login(Resource):
     def post(self):
@@ -735,7 +741,57 @@ class Trending(Resource):
             return {},200
 
         return trending_shows, 200
-  
+
+class ReviewSubmissionAPI(Resource):
+    def post(self):
+        data = request.json
+        review_text = data.get('reviewText')
+        show_id = data.get('show_id')
+        user_id = data.get('user_id')
+        rating = data.get('rating')
+        comment = data.get('comment')
+        
+        # Validate input
+        if not review_text or not show_id or not user_id:
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        # Prepare the DataFrame for prediction
+        df = pd.DataFrame({'reviewText': [review_text]})
+
+        try:
+            # Predict review_score
+            predicted_score = loaded_pipeline.predict(df)[0]
+            review_score = int(predicted_score)  # Ensure review_score is an integer (0 or 1)
+        except Exception as e:
+            return jsonify({'error': 'Prediction failed', 'details': str(e)}), 500
+
+        # Check if the show and user exist
+        show = Show.query.get(show_id)
+        user = User.query.get(user_id)
+        
+        if not show:
+            return jsonify({'error': 'Show not found'}), 404
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Create and save the review
+        review = Review(
+            rating=rating,
+            comment=comment,
+            review_score=review_score,
+            show_id=show_id,
+            user_id=user_id
+        )
+
+        try:
+            db.session.add(review)
+            db.session.commit()
+            return jsonify({'message': 'Review created successfully'}), 201
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': 'Failed to create review', 'details': str(e)}), 500
+
+
 # helper functions
 def is_valid_email(email):
     return email and '@' in email
