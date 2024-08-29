@@ -31,8 +31,8 @@ class Book(db.Model):
 
 class User(db.Model):
     __tablename__ = "user"
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String, unique=True, nullable=False)
+    id = db.Column(db.Integer)
+    email = db.Column(db.String, unique=True, nullable=False,  primary_key=True)
     name = db.Column(db.String, nullable=False)
     password = db.Column(db.String, nullable=False)
 
@@ -74,7 +74,7 @@ class Review(db.Model):
     review_score = db.Column(db.Integer, nullable=False)
 
     show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.String, db.ForeignKey('user.email'), nullable=False)
 
     show = db.relationship('Show', backref=db.backref('reviews', lazy=True))
     user = db.relationship('User', backref=db.backref('reviews', lazy=True))

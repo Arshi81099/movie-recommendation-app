@@ -2,6 +2,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 import regex as re
 import pandas as pd
+import pickle
+
 
 class TextProcessor(BaseEstimator, TransformerMixin):
     stop_words = set(ENGLISH_STOP_WORDS)
@@ -60,3 +62,5 @@ class TextProcessor(BaseEstimator, TransformerMixin):
         text = " ".join(whitespace_removed)
 
         return text
+
+

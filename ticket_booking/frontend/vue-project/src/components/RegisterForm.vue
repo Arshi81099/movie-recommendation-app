@@ -63,6 +63,7 @@ export default {
           const name = this.name;
           const email = this.email;
           const access_token = response.data.access_token;
+          const id = response.data.id;
           // console.log(access_token);
 
 
