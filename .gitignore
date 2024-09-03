@@ -28,4 +28,3 @@ myenv/
 *.db
 venv/
 
-*.bin
