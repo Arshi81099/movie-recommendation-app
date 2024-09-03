@@ -27,3 +27,6 @@ myenv/
 *.rdb
 *.db
 venv/
+
+data/
+*.bin
