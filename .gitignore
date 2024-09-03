@@ -28,5 +28,4 @@ myenv/
 *.db
 venv/
 
-data/
 *.bin
